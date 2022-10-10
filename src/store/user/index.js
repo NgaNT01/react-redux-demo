@@ -55,11 +55,15 @@ export const userSlice = createSlice({
             const updateIndex = oldUser.findIndex(user => user.id === action.payload.id);
             oldUser[updateIndex] = action.payload;
             state.listUser = oldUser;
+        },
+        deleteUser: (state, action) => {
+            const delIndex = action.payload.id;
+            state.listUser = state.listUser.filter(user => user.id !== delIndex);
         }
     }
 });
 
-export const { setListUser, addUser, updateUser } = userSlice.actions;
+export const { setListUser, addUser, updateUser, deleteUser } = userSlice.actions;
 
 // export const selectListUser = (state) => { state?.user?.listUser };
 

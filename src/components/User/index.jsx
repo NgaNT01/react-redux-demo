@@ -4,7 +4,7 @@ import { useState } from "react";
 import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import './styles.css';
 import { useSelector, useDispatch } from 'react-redux';
-import { addUser } from "../../store/user";
+import { addUser, deleteUser, updateUser } from "../../store/user";
 
 const User = () => {
     const [visibleEdit, setVisibleEdit] = useState(false);
@@ -101,6 +101,11 @@ const User = () => {
         }
     }
 
+    const onEditUserClicked = () => {
+        dispatch(updateUser(userInfo));
+        setUserInfo(null);
+    }
+
     const openNotificationEditSucces = () => {
         notification['success']({
             message: 'Edit Alert',
@@ -131,6 +136,7 @@ const User = () => {
                 // setDataSource(pre => {
                 //     return pre.filter(user => user.id !== record.id);
                 // });
+                dispatch(deleteUser(record));
                 openNotificationDeleteSucces();
             }
         });
@@ -222,14 +228,7 @@ const User = () => {
                     open={visibleEdit}
                     okText="Save"
                     onOk={() => {
-                        // setDataSource(pre => {
-                        //     return pre.map(user => {
-                        //         if (user.id === userInfo.id) {
-                        //             return userInfo;
-                        //         }
-                        //         else return user;
-                        //     });
-                        // });
+                        onEditUserClicked();
                         setVisibleEdit(false);
                         openNotificationEditSucces();
                     }}
