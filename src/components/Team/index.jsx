@@ -62,7 +62,7 @@ const Team = () => {
             okType: 'danger',
             onOk: () => {
                 setDataSource(pre => {
-                    return pre.filter(team => team.id !== team.id);
+                    return pre.filter(team => team.id !== record.id);
                 });
             }
         });

@@ -13,8 +13,8 @@ export const teamSlice = createSlice({
         },
         updateTeam: (state, action) => {
             const oldTeam = state.listTeam;
-            const updateIndex = oldUser.findIndex(team => team.id === action.payload.id);
-            oldUser[updateIndex] = action.payload;
+            const updateIndex = oldTeam.findIndex(team => team.id === action.payload.id);
+            oldTeam[updateIndex] = action.payload;
             state.listTeam = oldTeam;
         }
     }
