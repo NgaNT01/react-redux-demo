@@ -1,7 +1,28 @@
 import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
-    listTeam: [],
+    listTeam: [
+        {
+            key: '1',
+            id: 1,
+            name: 'Newji VR',
+        },
+        {
+            key: '2',
+            id: 2,
+            name: 'Air Circle',
+        },
+        {
+            key: '3',
+            id: 3,
+            name: 'CIMB',
+        },
+        {
+            key: '4',
+            id: 4,
+            name: '2nd B@r',
+        },
+    ],
 };
 
 export const teamSlice = createSlice({
@@ -13,8 +34,8 @@ export const teamSlice = createSlice({
         },
         updateTeam: (state, action) => {
             const oldTeam = state.listTeam;
-            const updateIndex = oldUser.findIndex(team => team.id === action.payload.id);
-            oldUser[updateIndex] = action.payload;
+            const updateIndex = oldTeam.findIndex(team => team.id === action.payload.id);
+            oldTeam[updateIndex] = action.payload;
             state.listTeam = oldTeam;
         }
     }

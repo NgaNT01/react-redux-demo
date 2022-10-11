@@ -1,53 +1,25 @@
-import React from "react";
-import { Button, Space, Table, Form, Modal, Input } from 'antd';
-import Column from "antd/lib/table/Column";
+import React, { useEffect, useId } from "react";
+import { Button, Table, Form, Modal, Input, Select, notification } from 'antd';
 import { useState } from "react";
-import { ExclamationCircleOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { useSelector, useDispatch } from 'react-redux';
 import './styles.css';
-import { isVisible } from "@testing-library/user-event/dist/utils";
-
-const { confirm } = Modal;
+import { addUser, updateUser,deleteUser } from "../../store/user";
 
 const User = () => {
     const [visibleEdit, setVisibleEdit] = useState(false);
-    const [userInfo, setUserInfo] = useState(null);
-    const [dataSource, setDataSource] = useState([
-        {
-            key: '1',
-            id: 1,
-            name: 'Tấn Ngà',
-            birthDay: '01/06/2001',
-            teamId: '3',
-        },
-        {
-            key: '2',
-            id: 2,
-            name: 'Hiếu Ngô',
-            birthDay: '31/12/1998',
-            teamId: '3',
-        },
-        {
-            key: '3',
-            id: 3,
-            name: 'Hải Triệu',
-            birthDay: '03/04/1992',
-            teamId: '2',
-        },
-        {
-            key: '4',
-            id: 4,
-            name: 'Định Thái',
-            birthDay: '04/03/1992',
-            teamId: '1',
-        },
-        {
-            key: '5',
-            id: 5,
-            name: 'Hồng Minh',
-            birthDay: '03/12/1998',
-            teamId: '2',
-        },
-    ]);
+    const [editId, setEditId] = useState(null);
+    const listUser = useSelector(state => state.user.listUser);
+    const listTeam = useSelector(state => state.team.listTeam);
+    const dispatch = useDispatch();
+    const { Option } = Select;
+    const [form] = Form.useForm();
+
+    const initForm = {
+        name: '',
+        birthDay: '',
+        teamId: '',
+    }
 
     const columns = [
         {
@@ -67,13 +39,21 @@ const User = () => {
         },
         {
             key: 'teamId',
-            title: 'Team ID',
-            dataIndex: 'teamId',
+            title: 'Team Name',
+            render: (record) => {
+                const teamId = listUser.find(user => user.id === record.id).teamId;
+                switch (teamId) {
+                    case 1: return (<span>Newji VR</span>)
+                    case 2: return (<span>Air Circle</span>)
+                    case 3: return (<span>CIMB</span>)
+                    case 4: return (<span>2nd B@r</span>)
+                }
+            }
         },
         {
             key: 'actions',
             title: 'Actions',
-            render: (record) => {
+            render: (_, record, index) => {
                 return (
                     <>
                         <EditOutlined onClick={() => { onEditUser(record) }} />
@@ -90,29 +70,71 @@ const User = () => {
             okText: 'Yes',
             okType: 'danger',
             onOk: () => {
-                setDataSource(pre => {
-                    return pre.filter(user => user.id !== record.id);
-                });
+                dispatch(deleteUser(record))
             }
         });
+        notification['success']({
+            message: 'Delete user',
+            description:
+              'Success!You delete the user',
+          });
     }
 
-    const onEditUser = (record) => {
+    const onEditUser = (record, index) => {
+        setEditId(record.id); 
         setVisibleEdit(true);
-        setUserInfo({ ...record });
     }
 
     const handleAddUser = () => {
-        const newUser = {
-            key: `${Math.random() * 1000}`,
-            id: parseInt(Math.random() * 1000),
-            name: 'Định Thái',
-            birthDay: '04/03/1992',
-            teamId: '1',
-        };
-        setDataSource(pre => {
-            return [...pre, newUser];
-        });
+        setEditId(null);
+        setVisibleEdit(true);
+    }
+
+    const onFinish = (values) => {
+        if (editId) {
+            dispatch(updateUser({
+                id: editId,
+                name: values.name,
+                birthDay: values.birthDay,
+                teamId: parseInt(values.teamId),
+            }));
+        }
+        else {
+            dispatch(addUser({
+                id: parseInt(Math.random()*1000),
+                name: values.name,
+                birthDay: values.birthDay,
+                teamId: parseInt(values.teamId),
+            }))
+        }
+        openNotification();
+    }
+
+    useEffect(() => {
+        if (editId) {
+            const data = listUser.find(item => item.id === editId)
+            form.setFieldsValue(data)
+        } else {
+            form.setFieldsValue(initForm);
+        }
+
+    }, [editId])
+
+    const openNotification = () => {
+        if (editId) {
+            notification['success']({
+                message: 'Edit user',
+                description:
+                  'Success!You edited the user',
+              });
+        }
+        else {
+            notification['success']({
+                message: 'Add user',
+                description:
+                  'Success!You added the user',
+              });
+        }
     }
 
     return (
@@ -124,63 +146,66 @@ const User = () => {
                 </div>
                 <Table
                     bordered
-                    dataSource={dataSource}
+                    dataSource={listUser}
                     columns={columns}
                     tableLayout='fixed'
                     pagination={false}
                 >
                 </Table >
-                <Modal
-                    title="Edit user"
-                    open={visibleEdit}
-                    okText="Save"
-                    onOk={() => {
-                        setDataSource(pre => {
-                            return pre.map(user => {
-                                if (user.id === userInfo.id) {
-                                    return userInfo;
-                                }
-                                else return user;
-                            });
-                        });
-                        setVisibleEdit(false);
-                    }}
-                    onCancel={() => { setVisibleEdit(false) }}
-                >
-                    <Form layout="vertical">
-                        <Form.Item
-                            label="Name"
-                            required="true"
-                        >
-                            <Input value={userInfo?.name} onChange={e => {
-                                setUserInfo(pre => {
-                                    return { ...pre, name: e.target.value }
-                                });
-                            }}></Input>
-                        </Form.Item>
-                        <Form.Item
-                            label="Birth Day"
-                            required="true"
-                        >
-                            <Input value={userInfo?.birthDay} onChange={e => {
-                                setUserInfo(pre => {
-                                    return { ...pre, birthDay: e.target.value }
-                                });
-                            }}></Input>
-                        </Form.Item>
-                        <Form.Item
-                            label="Team ID"
-                            required="true"
-                        >
-                            <Input value={userInfo?.teamId} onChange={e => {
-                                setUserInfo(pre => {
-                                    return { ...pre, teamId: e.target.value }
-                                });
-                            }}></Input>
-                        </Form.Item>
-                    </Form>
-                </Modal>
             </div>
+            <Modal
+                title={editId ? "Edit form" : "Add form"}
+                open={visibleEdit}
+                okText="Save"
+                onCancel={() => { setVisibleEdit(false) }}
+                footer={null}
+                destroyOnClose={true}
+            >
+                <Form layout="vertical" form={form} onFinish={onFinish}>
+                    <Form.Item
+                        name="name"
+                        label="Name"
+                        required="true"
+                        rules={[{
+                            required: true,
+                            message: "Please enter name!"
+                        }]}
+                    >
+                        <Input></Input>
+                    </Form.Item>
+                    <Form.Item
+                        name="birthDay"
+                        label="Birth Day"
+                        required="true"
+                        rules={[{
+                            required: true,
+                            message: "Please enter birthday!"
+                        }]}
+                    >
+                        <Input></Input>
+                    </Form.Item>
+                    <Form.Item
+                        name="teamId"
+                        label="Team Name"
+                        required="true"
+                        rules={[{
+                            required: true,
+                            message: "Please enter team name!"
+                        }]}
+                    >
+                        <Select>
+                            {listTeam.map((team) => {
+                                return (
+                                    <Option key={team.id} values={team.id}>{team.name}</Option>
+                                )
+                            })}
+                        </Select>
+                    </Form.Item>
+                    <Form.Item>
+                        <Button htmlType="submit" type="primary" onClick={() => {setVisibleEdit(false);}}>Save</Button>
+                    </Form.Item>
+                </Form>
+            </Modal>
         </div >
     );
 }

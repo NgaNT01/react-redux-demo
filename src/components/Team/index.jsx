@@ -3,32 +3,13 @@ import { Button, Table, Modal, Input, Form } from 'antd';
 import { useState } from "react";
 import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import './styles.css';
+import { useSelector,useDispatch } from "react-redux";
 
 const Team = () => {
     const [visibleEdit, setVisibleEdit] = useState(false);
     const [teamInfo, setTeamInfo] = useState(null);
-    const [dataSource, setDataSource] = useState([
-        {
-            key: '1',
-            id: 1,
-            name: 'Newji VR',
-        },
-        {
-            key: '2',
-            id: 2,
-            name: 'CIMB',
-        },
-        {
-            key: '3',
-            id: 3,
-            name: 'Air Circle',
-        },
-        {
-            key: '4',
-            id: 4,
-            name: '2nd B@r',
-        },
-    ]);
+    const [dataSource, setDataSource] = useState();
+    const listTeam = useSelector(state => state.team.listTeam);
 
     const columns = [
         {
@@ -93,7 +74,7 @@ const Team = () => {
                 </div>
                 <Table
                     bordered
-                    dataSource={dataSource}
+                    dataSource={listTeam}
                     columns={columns}
                     tableLayout='fixed'
                     pagination={false}
