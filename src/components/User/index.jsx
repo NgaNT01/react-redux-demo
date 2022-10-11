@@ -4,7 +4,7 @@ import { useState } from "react";
 import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useSelector, useDispatch } from 'react-redux';
 import './styles.css';
-import { addUser, updateUser,deleteUser } from "../../store/user";
+import { addUser, updateUser, deleteUser } from "../../store/user";
 
 const User = () => {
     const [visibleEdit, setVisibleEdit] = useState(false);
@@ -76,12 +76,12 @@ const User = () => {
         notification['success']({
             message: 'Delete user',
             description:
-              'Success!You delete the user',
-          });
+                'Success!You delete the user',
+        });
     }
 
     const onEditUser = (record, index) => {
-        setEditId(record.id); 
+        setEditId(record.id);
         setVisibleEdit(true);
     }
 
@@ -101,13 +101,14 @@ const User = () => {
         }
         else {
             dispatch(addUser({
-                id: parseInt(Math.random()*1000),
+                id: parseInt(Math.random() * 1000),
                 name: values.name,
                 birthDay: values.birthDay,
                 teamId: parseInt(values.teamId),
             }))
         }
         openNotification();
+        if (!editId) form.setFieldsValue(initForm);
     }
 
     useEffect(() => {
@@ -125,15 +126,15 @@ const User = () => {
             notification['success']({
                 message: 'Edit user',
                 description:
-                  'Success!You edited the user',
-              });
+                    'Success!You edited the user',
+            });
         }
         else {
             notification['success']({
                 message: 'Add user',
                 description:
-                  'Success!You added the user',
-              });
+                    'Success!You added the user',
+            });
         }
     }
 
@@ -157,11 +158,11 @@ const User = () => {
                 title={editId ? "Edit form" : "Add form"}
                 open={visibleEdit}
                 okText="Save"
-                onCancel={() => { setVisibleEdit(false) }}
+                onCancel={() => { setVisibleEdit(false);}}
                 footer={null}
                 destroyOnClose={true}
             >
-                <Form layout="vertical" form={form} onFinish={onFinish}>
+                <Form layout="vertical" form={form} onFinish={onFinish} >
                     <Form.Item
                         name="name"
                         label="Name"
@@ -193,16 +194,23 @@ const User = () => {
                             message: "Please enter team name!"
                         }]}
                     >
-                        <Select>
+                        <Select >
                             {listTeam.map((team) => {
                                 return (
-                                    <Option key={team.id} values={team.id}>{team.name}</Option>
+                                    <Option key={team.id} value={team.id}>{team.name}</Option>
                                 )
                             })}
                         </Select>
                     </Form.Item>
                     <Form.Item>
-                        <Button htmlType="submit" type="primary" onClick={() => {setVisibleEdit(false);}}>Save</Button>
+                        <Button htmlType="submit" type="primary" onClick={async () => {
+                            try {
+                                const values = await form.validateFields();
+                                setVisibleEdit(false);
+                            } catch (errorInfo) {
+                                console.log('Failed:', errorInfo);
+                            }
+                        }}>Save</Button>
                     </Form.Item>
                 </Form>
             </Modal>
