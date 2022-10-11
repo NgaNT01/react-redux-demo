@@ -41,13 +41,10 @@ const User = () => {
             key: 'teamId',
             title: 'Team Name',
             render: (record) => {
-                const teamId = listUser.find(user => user.id === record.id).teamId;
-                switch (teamId) {
-                    case 1: return (<span>Newji VR</span>)
-                    case 2: return (<span>Air Circle</span>)
-                    case 3: return (<span>CIMB</span>)
-                    case 4: return (<span>2nd B@r</span>)
-                }
+                const teamName = listTeam.find(team => team.id === record.teamId).name;
+                return (
+                    <span>{`${teamName}`}</span>
+                )
             }
         },
         {
@@ -142,6 +139,17 @@ const User = () => {
         <div className="userTab">
             <div className="userTabHeader">
                 <span style={{ fontWeight: 'bolder' }}>User</span>
+                {/* <Form>
+                    <Form.Item>
+                        <Input></Input>
+                    </Form.Item>
+                    <Form.Item>
+                        <Select>
+                            {listTeam.map((team) => {
+                            })}
+                        </Select>
+                    </Form.Item>
+                </Form> */}
                 <div className="btnSave">
                     <Button type="primary" size="middle" onClick={handleAddUser}>Add a new user</Button>
                 </div>
