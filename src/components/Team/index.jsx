@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { EditOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons';
 import './styles.css';
 import { useSelector, useDispatch } from "react-redux";
-import { deleteTeam, addTeam, updateTeam } from "../../store/team";
+import team, { deleteTeam, addTeam, updateTeam } from "../../store/team";
+import { updateUser} from "../../store/user";
 
 const Team = () => {
     const [visibleEdit, setVisibleEdit] = useState(false);
@@ -12,6 +13,7 @@ const Team = () => {
     const [editId, setEditId] = useState(null);
     const listTeam = useSelector(state => state.team.listTeam);
     const listUser = useSelector(state => state.user.listUser);
+    console.log(listUser);
     const [listUserOfTeam, setListUserOfTeam] = useState([]);
     const dispatch = useDispatch();
     const [form] = Form.useForm();
@@ -173,15 +175,23 @@ const Team = () => {
     }
 
     const onFinishAddUser = values => {
-        const oldList = listUserOfTeam;
+        const oldList = [...listUserOfTeam];
         const userToAdd = listUser.find(user => user.id === values.id);
-        oldList.push(userToAdd);
-        console.log(oldList)
         setListUserOfTeam(oldList);
+        let oldTeamList = userToAdd.teamId;
+        oldTeamList = oldTeamList.concat([editId])
+        dispatch(updateUser({
+            ...userToAdd,
+            teamId: oldTeamList.slice(0)
+        }))
     }
 
     const onAddUserToTeam = () => {
 
+    }
+    
+    const getUserOfTeam = (teamId) => {
+        return [...listUser.filter(user => user.teamId.includes(teamId))];
     }
 
     return (
@@ -218,14 +228,7 @@ const Team = () => {
                             <Input />
                         </Form.Item>
                         <Form.Item>
-                            <Button type="primary" htmlType="submit" onClick={async () => {
-                                try {
-                                    const values = await form.validateFields();
-                                    setVisibleEdit(false);
-                                } catch (errorInfo) {
-                                    console.log('Failed:', errorInfo);
-                                }
-                            }}>Save</Button>
+                            <Button type="primary" htmlType="submit">Save</Button>
                         </Form.Item>
                     </Form>
                 </Modal>
@@ -254,7 +257,7 @@ const Team = () => {
                     <span style={{ fontWeight: 'bold' }}>User of the selected Team</span>
                     <Table
                         bordered
-                        dataSource={listUserOfTeam}
+                        dataSource={getUserOfTeam(editId)}
                         columns={userColumns}
                         pagination={false}
                     ></Table>

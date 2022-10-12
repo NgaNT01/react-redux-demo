@@ -45,6 +45,7 @@ export const userSlice = createSlice({
             state.listUser = action.payload;
         },
         updateUser: (state, action) => {
+            console.log(action.payload);
             const oldUser = state.listUser;
             const updateIndex = oldUser.findIndex(user => user.id === action.payload.id);
             oldUser[updateIndex] = action.payload;
@@ -59,6 +60,6 @@ export const userSlice = createSlice({
     }
 });
 
-export const { setListUser, updateUser, addUser, deleteUser } = userSlice.actions;
+export const { setListUser, updateUser, addUser, deleteUser, addTeamIdToUser } = userSlice.actions;
 
 export default userSlice.reducer;
