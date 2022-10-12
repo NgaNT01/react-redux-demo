@@ -5,7 +5,7 @@ import { EditOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons';
 import './styles.css';
 import { useSelector, useDispatch } from "react-redux";
 import team, { deleteTeam, addTeam, updateTeam } from "../../store/team";
-import { updateUser} from "../../store/user";
+import { deleteUser, updateUser } from "../../store/user";
 
 const Team = () => {
     const [visibleEdit, setVisibleEdit] = useState(false);
@@ -13,7 +13,6 @@ const Team = () => {
     const [editId, setEditId] = useState(null);
     const listTeam = useSelector(state => state.team.listTeam);
     const listUser = useSelector(state => state.user.listUser);
-    console.log(listUser);
     const [listUserOfTeam, setListUserOfTeam] = useState([]);
     const dispatch = useDispatch();
     const [form] = Form.useForm();
@@ -24,11 +23,9 @@ const Team = () => {
         name: '',
     };
 
-    const listUserNotOnTeam = [];
-
-    listUser.filter(user => {
-        if (user.teamId.findIndex(teamId => teamId === editId) === -1) listUserNotOnTeam.push(user);
-    });
+    const listUserNotOnTeam = () => {
+        return listUser.filter(item => !item.teamId.includes(editId));
+    }
 
     const columns = [
         {
@@ -73,17 +70,38 @@ const Team = () => {
             dataIndex: 'birthDay',
         },
         {
-            key: 'teamId',
-            title: 'Team Name',
+            key: 'actions',
+            title: 'Actions',
             render: (record) => {
-                const arrOfName = [];
-                record.teamId.forEach(element => {
-                    arrOfName.push(listTeam.find(team => team.id === element)?.name);
-                })
-                return (<span>{arrOfName.join(', ')}</span>)
+                return (
+                    <DeleteOutlined style={{ color: 'red', marginLeft: '20px' }} onClick={() => onDeleteUserOfTeam(record)} />
+                )
             }
         },
     ];
+
+    const onDeleteUserOfTeam = (record) => {
+        Modal.confirm({
+            title: 'Are you sure, you want to delete this user of team ?',
+            okText: 'Yes',
+            okType: 'danger',
+            onOk: () => {
+                let userToDelete = listUser.find(user => user.id === record.id);
+                let oldTeamList = [...userToDelete.teamId];
+                const delIndex = oldTeamList.findIndex(item => item === editId);
+                oldTeamList.splice(delIndex, 1);
+                dispatch(updateUser({
+                    ...userToDelete,
+                    teamId: oldTeamList.slice(0)
+                }))
+                notification['success']({
+                    message: 'Delete user',
+                    description:
+                        'Success!You deleted the user of team',
+                });
+            }
+        });
+    }
 
     const renderListUserOfTeam = (record) => {
         const oldList = [];
@@ -101,7 +119,7 @@ const Team = () => {
             okText: 'Yes',
             okType: 'danger',
             onOk: () => {
-                dispatch(deleteTeam(record));
+                dispatch(deleteUser(record));
                 notification['success']({
                     message: 'Delete team',
                     description:
@@ -138,7 +156,7 @@ const Team = () => {
     useEffect(() => {
 
         formUser.setFieldsValue();
-    },[listUserOfTeam])
+    }, [listUserOfTeam])
 
     const openNotification = () => {
         if (editId) {
@@ -175,9 +193,7 @@ const Team = () => {
     }
 
     const onFinishAddUser = values => {
-        const oldList = [...listUserOfTeam];
         const userToAdd = listUser.find(user => user.id === values.id);
-        setListUserOfTeam(oldList);
         let oldTeamList = userToAdd.teamId;
         oldTeamList = oldTeamList.concat([editId])
         dispatch(updateUser({
@@ -189,7 +205,7 @@ const Team = () => {
     const onAddUserToTeam = () => {
 
     }
-    
+
     const getUserOfTeam = (teamId) => {
         return [...listUser.filter(user => user.teamId.includes(teamId))];
     }
@@ -243,7 +259,7 @@ const Team = () => {
                             name="id"
                         >
                             <Select>
-                                {listUserNotOnTeam.map(user => {
+                                {listUserNotOnTeam().map(user => {
                                     return (
                                         <Option key={user.id} value={user.id}>{user.name}</Option>
                                     )
