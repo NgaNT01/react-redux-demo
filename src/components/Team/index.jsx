@@ -1,15 +1,39 @@
 import React from "react";
-import { Button, Table, Modal, Input, Form } from 'antd';
-import { useState } from "react";
-import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Button, Table, Modal, Input, Form, notification, Select } from 'antd';
+import { useState, useEffect } from "react";
+import { EditOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons';
 import './styles.css';
-import { useSelector,useDispatch } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { deleteTeam, addTeam, updateTeam } from "../../store/team";
 
 const Team = () => {
     const [visibleEdit, setVisibleEdit] = useState(false);
+    const [visibleView, setVisibleView] = useState(false);
+    const [editId, setEditId] = useState(null);
     const [teamInfo, setTeamInfo] = useState(null);
-    const [dataSource, setDataSource] = useState();
     const listTeam = useSelector(state => state.team.listTeam);
+    const listUser = useSelector(state => state.user.listUser);
+    const dispatch = useDispatch();
+    const [form] = Form.useForm();
+    const [formUser] = Form.useForm();
+    const {Option} = Select;
+
+    const initForm = {
+        name: '',
+    };
+
+    const listUserOfTeam = [];
+    const listUserNotOnTeam = [];
+
+    listUser.forEach(element => {
+        element.teamId.forEach(teamId => {
+            if (teamId === editId) listUserOfTeam.push(element);
+        });
+    });
+
+    listUser.filter(user => {
+        if (user.teamId.findIndex(teamId => teamId === editId) === -1) listUserNotOnTeam.push(user);
+    });
 
     const columns = [
         {
@@ -28,10 +52,40 @@ const Team = () => {
             render: (record) => {
                 return (
                     <>
-                        <EditOutlined onClick={() => { onEditTeam(record) }} />
-                        <DeleteOutlined onClick={() => { onDeleteTeam(record) }} style={{ color: 'red', marginLeft: '12px' }} />
+                        <EditOutlined onClick={() => onEditTeam(record)} />
+                        <DeleteOutlined onClick={() => onDeleteTeam(record)} style={{ color: 'red', marginLeft: '12px' }} />
+                        <EyeOutlined onClick={() => onViewTeam(record)} style={{ color: 'red', marginLeft: '12px' }} />
                     </>
                 )
+            }
+        },
+    ];
+
+    const userColumns = [
+        {
+            key: 'id',
+            title: 'ID',
+            dataIndex: 'id',
+        },
+        {
+            key: 'name',
+            title: 'Name',
+            dataIndex: 'name',
+        },
+        {
+            key: 'birthDay',
+            title: 'Birth Day',
+            dataIndex: 'birthDay',
+        },
+        {
+            key: 'teamId',
+            title: 'Team Name',
+            render: (record) => {
+                const arrOfName = [];
+                record.teamId.forEach(element => {
+                    arrOfName.push(listTeam.find(team => team.id === element)?.name);
+                })
+                return (<span>{arrOfName.join(', ')}</span>)
             }
         },
     ];
@@ -42,27 +96,79 @@ const Team = () => {
             okText: 'Yes',
             okType: 'danger',
             onOk: () => {
-                setDataSource(pre => {
-                    return pre.filter(team => team.id !== team.id);
+                dispatch(deleteTeam(record));
+                notification['success']({
+                    message: 'Delete team',
+                    description:
+                        'Success!You delete the team',
                 });
             }
         });
     }
 
-    const onEditTeam = (record) => {
+    const onEditTeam = record => {
+        setEditId(record.id);
         setVisibleEdit(true);
-        setTeamInfo({ ...record });
     }
 
-    const handleAddTeam = () => {
-        const newTeam = {
-            key: `${Math.random() * 1000}`,
-            id: parseInt(Math.random() * 1000),
-            name: 'Newji VR',
-        };
-        setDataSource(pre => {
-            return [...pre, newTeam];
-        });
+    const onViewTeam = record => {
+        setEditId(record.id);
+        setVisibleView(true);
+    };
+
+    const handleAddTeam = record => {
+        setEditId(null);
+        setVisibleEdit(true);
+    }
+
+    useEffect(() => {
+        if (editId) {
+            const data = listTeam.find(team => team.id === editId)
+            form.setFieldsValue(data)
+        } else form.setFieldsValue(initForm);
+
+    }, [editId])
+
+    const openNotification = () => {
+        if (editId) {
+            notification['success']({
+                message: 'Edit user',
+                description:
+                    'Success!You edited the user',
+            });
+        }
+        else {
+            notification['success']({
+                message: 'Add user',
+                description:
+                    'Success!You added the user',
+            });
+        }
+    }
+
+    const onFinish = values => {
+        if (editId) {
+            dispatch(updateTeam({
+                id: editId,
+                name: values.name,
+            }));
+        }
+        else {
+            dispatch(addTeam({
+                id: parseInt(Math.random() * 1000),
+                name: values.name,
+            }))
+        }
+        openNotification();
+        if (!editId) form.setFieldsValue(initForm);
+    }
+
+    const onFinishAddUser = values => {
+
+    }
+
+    const onAddUserToTeam = () => {
+
     }
 
     return (
@@ -76,36 +182,69 @@ const Team = () => {
                     bordered
                     dataSource={listTeam}
                     columns={columns}
-                    tableLayout='fixed'
-                    pagination={false}
                 >
                 </Table >
                 <Modal
-                    title="Edit team"
+                    title={editId ? "Edit form" : "Add form"}
                     open={visibleEdit}
                     okText="Save"
-                    onOk={() => {
-                        setDataSource(pre => {
-                            return pre.map(team => {
-                                if (team.id === teamInfo.id) {
-                                    return teamInfo;
-                                }
-                                else return team;
-                            });
-                        });
-                        setVisibleEdit(false);
-                    }}
-                    onCancel={() => { setVisibleEdit(false) }}
+                    onCancel={() => setVisibleEdit(false)}
+                    footer={null}
+                    destroyOnClose={true}
                 >
-                    <Form layout="vertical">
-                        <Form.Item label="Name" required="true">
-                            <Input value={teamInfo?.name} onChange={e => {
-                                setTeamInfo(pre => {
-                                    return { ...pre, name: e.target.value }
-                                });
-                            }}></Input>
+                    <Form layout="vertical" form={form} onFinish={onFinish}>
+                        <Form.Item
+                            name="name"
+                            label="Name"
+                            required="true"
+                            rules={[{
+                                required: true,
+                                message: "Please enter name!"
+                            }]}
+                        >
+                            <Input/>
+                        </Form.Item>
+                        <Form.Item>
+                            <Button type="primary" htmlType="submit" onClick={async () => {
+                                try {
+                                    const values = await form.validateFields();
+                                    setVisibleEdit(false);
+                                } catch (errorInfo) {
+                                    console.log('Failed:', errorInfo);
+                                }
+                            }}>Save</Button>
                         </Form.Item>
                     </Form>
+                </Modal>
+                <Modal
+                    title="Select the User"
+                    open={visibleView}
+                    onCancel={() => setVisibleView(false)}
+                    footer={null}
+                >
+                    <Form form={formUser} onFinish={onFinishAddUser}>
+                        <Form.Item
+                            name="name"
+                        >
+                            <Select>
+                                {listUserNotOnTeam.map(user => {
+                                    return (
+                                        <Option key={user.id} value={user.id}>{user.name}</Option>
+                                    )
+                                })}
+                            </Select>
+                        </Form.Item>
+                        <Form.Item>
+                            <Button type="primary" htmlType="submit" onClick={onAddUserToTeam}>Add</Button>
+                        </Form.Item>
+                    </Form>
+                    <span style={{fontWeight: 'bold'}}>User of the selected Team</span>
+                    <Table
+                        bordered
+                        dataSource={listUserOfTeam}
+                        columns={userColumns}
+                        pagination={false}
+                    ></Table>
                 </Modal>
             </div>
         </div >

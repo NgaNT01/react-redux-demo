@@ -1,7 +1,7 @@
-import React, { useEffect, useId } from "react";
+import React, { useEffect } from "react";
 import { Button, Table, Form, Modal, Input, Select, notification } from 'antd';
 import { useState } from "react";
-import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { EditOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons';
 import { useSelector, useDispatch } from 'react-redux';
 import './styles.css';
 import { addUser, updateUser, deleteUser } from "../../store/user";
@@ -41,10 +41,11 @@ const User = () => {
             key: 'teamId',
             title: 'Team Name',
             render: (record) => {
-                const teamName = listTeam.find(team => team.id === record.teamId).name;
-                return (
-                    <span>{`${teamName}`}</span>
-                )
+                const arrOfName = [];
+                record.teamId.forEach(element => {
+                    arrOfName.push(listTeam.find(team => team.id === element)?.name);
+                })
+                return (<span>{arrOfName.join(', ')}</span>)
             }
         },
         {
@@ -67,13 +68,13 @@ const User = () => {
             okText: 'Yes',
             okType: 'danger',
             onOk: () => {
-                dispatch(deleteUser(record))
+                dispatch(deleteUser(record));
+                notification['success']({
+                    message: 'Delete user',
+                    description:
+                        'Success!You delete the user',
+                });
             }
-        });
-        notification['success']({
-            message: 'Delete user',
-            description:
-                'Success!You delete the user',
         });
     }
 
@@ -139,18 +140,24 @@ const User = () => {
         <div className="userTab">
             <div className="userTabHeader">
                 <span style={{ fontWeight: 'bolder' }}>User</span>
-                {/* <Form>
-                    <Form.Item>
-                        <Input></Input>
-                    </Form.Item>
-                    <Form.Item>
-                        <Select>
-                            {listTeam.map((team) => {
-                            })}
-                        </Select>
-                    </Form.Item>
-                </Form> */}
                 <div className="btnSave">
+                    <Form style={{marginRight: '20px'}}>
+                        <Form.Item>
+                            <Input placeholder="Enter the username..."></Input>
+                        </Form.Item>
+                        <Form.Item>
+                            <Select>
+                                {listTeam.map((team) => {
+                                    return (
+                                        <Option key={team.id} value={team.id}>{team.name}</Option>
+                                    )
+                                })}
+                            </Select>
+                        </Form.Item>
+                        <Form.Item>
+                            <Button htmlType="submit" type="primary">Search</Button>
+                        </Form.Item>
+                    </Form>
                     <Button type="primary" size="middle" onClick={handleAddUser}>Add a new user</Button>
                 </div>
                 <Table
@@ -158,7 +165,7 @@ const User = () => {
                     dataSource={listUser}
                     columns={columns}
                     tableLayout='fixed'
-                    pagination={false}
+                    rowKey="uid"
                 >
                 </Table >
             </div>
@@ -166,7 +173,7 @@ const User = () => {
                 title={editId ? "Edit form" : "Add form"}
                 open={visibleEdit}
                 okText="Save"
-                onCancel={() => { setVisibleEdit(false);}}
+                onCancel={() => { setVisibleEdit(false); }}
                 footer={null}
                 destroyOnClose={true}
             >

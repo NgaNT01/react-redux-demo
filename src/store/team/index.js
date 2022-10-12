@@ -37,10 +37,16 @@ export const teamSlice = createSlice({
             const updateIndex = oldTeam.findIndex(team => team.id === action.payload.id);
             oldTeam[updateIndex] = action.payload;
             state.listTeam = oldTeam;
+        },
+        addTeam: (state, action) => {
+            state.listTeam.push(action.payload);
+        },
+        deleteTeam: (state, action) => {
+            state.listTeam = state.listTeam.filter(team => team.id !== action.payload.id);
         }
     }
 });
 
-export const { setListTeam, updateTeam } = teamSlice.actions;
+export const { setListTeam, updateTeam, addTeam, deleteTeam } = teamSlice.actions;
 
 export default teamSlice.reducer;

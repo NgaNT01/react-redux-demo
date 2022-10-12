@@ -6,33 +6,35 @@ const initialState = {
             id: 1,
             name: 'Tấn Ngà',
             birthDay: '01/06/2001',
-            teamId: 1,
+            teamId: [1,2,3],
         },
         {
             id: 2,
             name: 'Hiếu Ngô',
             birthDay: '31/12/1998',
-            teamId: 1,
+            teamId: [2,3],
         },
         {
             id: 3,
             name: 'Hải Triệu',
             birthDay: '03/04/1992',
-            teamId: 3,
+            teamId: [1,3],
         },
         {
             id: 4,
             name: 'Định Thái',
             birthDay: '04/03/1992',
-            teamId: 4,
+            teamId: [1,4],
         },
         {
             id: 5,
             name: 'Hồng Minh',
             birthDay: '03/12/1998',
-            teamId: 1,
+            teamId: [2,4],
         },
     ],
+    nameUserFilter: '',
+    nameTeamFilter: '',
 };
 
 export const userSlice = createSlice({
