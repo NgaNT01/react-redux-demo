@@ -10,26 +10,19 @@ const Team = () => {
     const [visibleEdit, setVisibleEdit] = useState(false);
     const [visibleView, setVisibleView] = useState(false);
     const [editId, setEditId] = useState(null);
-    const [teamInfo, setTeamInfo] = useState(null);
     const listTeam = useSelector(state => state.team.listTeam);
     const listUser = useSelector(state => state.user.listUser);
+    const [listUserOfTeam, setListUserOfTeam] = useState([]);
     const dispatch = useDispatch();
     const [form] = Form.useForm();
     const [formUser] = Form.useForm();
-    const {Option} = Select;
+    const { Option } = Select;
 
     const initForm = {
         name: '',
     };
 
-    const listUserOfTeam = [];
     const listUserNotOnTeam = [];
-
-    listUser.forEach(element => {
-        element.teamId.forEach(teamId => {
-            if (teamId === editId) listUserOfTeam.push(element);
-        });
-    });
 
     listUser.filter(user => {
         if (user.teamId.findIndex(teamId => teamId === editId) === -1) listUserNotOnTeam.push(user);
@@ -90,6 +83,16 @@ const Team = () => {
         },
     ];
 
+    const renderListUserOfTeam = (record) => {
+        const oldList = [];
+        listUser.forEach(element => {
+            element.teamId.forEach(teamId => {
+                if (teamId === record.id) oldList.push(element);
+            });
+        });
+        setListUserOfTeam(oldList);
+    }
+
     const onDeleteTeam = (record) => {
         Modal.confirm({
             title: 'Are you sure, you want to delete this team ?',
@@ -113,6 +116,7 @@ const Team = () => {
 
     const onViewTeam = record => {
         setEditId(record.id);
+        renderListUserOfTeam(record);
         setVisibleView(true);
     };
 
@@ -128,6 +132,11 @@ const Team = () => {
         } else form.setFieldsValue(initForm);
 
     }, [editId])
+
+    useEffect(() => {
+
+        formUser.setFieldsValue();
+    },[listUserOfTeam])
 
     const openNotification = () => {
         if (editId) {
@@ -164,7 +173,11 @@ const Team = () => {
     }
 
     const onFinishAddUser = values => {
-
+        const oldList = listUserOfTeam;
+        const userToAdd = listUser.find(user => user.id === values.id);
+        oldList.push(userToAdd);
+        console.log(oldList)
+        setListUserOfTeam(oldList);
     }
 
     const onAddUserToTeam = () => {
@@ -202,7 +215,7 @@ const Team = () => {
                                 message: "Please enter name!"
                             }]}
                         >
-                            <Input/>
+                            <Input />
                         </Form.Item>
                         <Form.Item>
                             <Button type="primary" htmlType="submit" onClick={async () => {
@@ -224,7 +237,7 @@ const Team = () => {
                 >
                     <Form form={formUser} onFinish={onFinishAddUser}>
                         <Form.Item
-                            name="name"
+                            name="id"
                         >
                             <Select>
                                 {listUserNotOnTeam.map(user => {
@@ -238,7 +251,7 @@ const Team = () => {
                             <Button type="primary" htmlType="submit" onClick={onAddUserToTeam}>Add</Button>
                         </Form.Item>
                     </Form>
-                    <span style={{fontWeight: 'bold'}}>User of the selected Team</span>
+                    <span style={{ fontWeight: 'bold' }}>User of the selected Team</span>
                     <Table
                         bordered
                         dataSource={listUserOfTeam}
